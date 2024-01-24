@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Trainbot</title>
+    <script>
+document.addEventListener("DOMContentLoaded", function() {
+    console.log("js loaded");
+    let refreshRate = 2000; // Start with the slowest rate to match Rust backend
+    let intervalId = setInterval(updateRate, refreshRate);
+    let isAutomatic = false;
+
+    function updateRate() {
+        fetch('/get_move')
+            .then(response => response.text())
+            .then(number => {
+                console.log("fetched number: ", number);
+                document.getElementById('number').innerText = number;
+                let utterance = new SpeechSynthesisUtterance(number);
+                speechSynthesis.speak(utterance);
+            });
+    };
+
+    document.getElementById('manualSlider').addEventListener('input', (event) => {
+        isAutomatic = false;
+        changeRefreshRate(parseInt(event.target.value));
+    });
+
+    document.getElementById('autoButton').addEventListener('click', () => {
+        isAutomatic = true;
+        resetToSlowest();
+    });
+
+    function changeRefreshRate(newRate) {
+        console.log("changing refresh rate to:", newRate);
+        refreshRate = newRate;
+        clearInterval(intervalId);
+        intervalId = setInterval(updateRate, refreshRate);
+    };
+
+    function resetToSlowest() {
+        changeRefreshRate(2000);
+        graduallyIncreaseRate();
+    };
+
+    function graduallyIncreaseRate() {
+        if (isAutomatic && refreshRate > 100) {
+            changeRefreshRate(refreshRate - 100); // Decrease the interval (increase the rate)
+            setTimeout(graduallyIncreaseRate, 5000); // Change every 5 seconds
+        }
+    };
+});
+</script>
+
+</head>
+<body>
+    <div id="number" style="font-size: 200px; text-align: center;"></div>
+    <input type="range" id="manualSlider" min="100" max="2000" value="1000" step="100">
+    <button id="autoButton">Automatic Control</button>
+    <script>
+	    console.log("this is a test");
+    </script>
+</body>
+</html>
+
